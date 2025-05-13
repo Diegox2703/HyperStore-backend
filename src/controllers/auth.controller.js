@@ -40,9 +40,17 @@ export const login = async (req, res) => {
         })
     }
 }
-
+  
 export const register = async (req, res) => {
+    const { email } = req.body
+   
     try {
+        const emailExist = await User.findOne({ email })
+
+        if (emailExist) return res.status(400).json({
+            message: 'Email ya existe'
+        })
+
         const user = new User(req.body)
         user.password = await bcrypt.hash(user.password, SALT)
 
@@ -52,7 +60,7 @@ export const register = async (req, res) => {
 
         const token = jwt.sign(newUser.toJSON(), JWT_SECRET, { expiresIn: '1d' })
 
-        res.status(200).json({
+        res.status(201).json({
             message: 'Usuario registrado',
             token,
             newUser

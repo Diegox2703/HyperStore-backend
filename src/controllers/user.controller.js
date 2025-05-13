@@ -2,7 +2,11 @@ import User from '../models/user.model.js'
 
 export const getUsers = async (req, res) => {
     try {
-        const users = await User.find({}).select({ __v: 0, password: 0 })
+        const searchName = new RegExp(req.query.username, 'i')
+
+        const users = await User.find({
+            username: searchName
+        }).select({ __v: 0, password: 0 })
 
         if (users.length === 0) return res.status(404).json({
             message: 'No hay usuarios'

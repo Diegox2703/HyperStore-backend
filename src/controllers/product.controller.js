@@ -2,7 +2,11 @@ import Product from '../models/product.model.js'
 
 export const getProducts = async (req, res) => {
     try {
-        const products = await Product.find({}).select({__v: 0})
+        const searchProduct = new RegExp(req.query.product, 'i')
+
+        const products = await Product.find({
+            product_name: searchProduct
+        }).select({__v: 0})
 
         if (products.length === 0) return res.status(404).json({
             message: 'No hay productos'
@@ -45,6 +49,8 @@ export const getProduct = async (req, res) => {
 export const createProduct = async (req, res) => {
     try {
         const product = new Product(req.body)
+        product.image = req.file?.filename
+        
         const newProduct = await product.save()
 
         res.status(201).json({

@@ -16,10 +16,10 @@ const productSchema = mongoose.Schema({
     category: {
         type: String,
         minLength: 3,
-        maxLength: 20,
+        maxLength: 30,
         required: true
     },
-    product_image: {
+    image: {
         type: String,
         required: true
     },
