@@ -7,6 +7,8 @@ export const getProducts = async (req, res) => {
         const products = await Product.find({
             product_name: searchProduct
         }).select({__v: 0})
+          .populate('category')
+          .populate('subcategory')
 
         if (products.length === 0) return res.status(404).json({
             message: 'No hay productos'
@@ -28,7 +30,10 @@ export const getProduct = async (req, res) => {
     const { id } = req.params
 
     try {
-        const product = await Product.findById(id).select({__v: 0})
+        const product = await Product.findById(id)
+                                     .select({__v: 0})
+                                     .populate('category')
+                                     .populate('subcategory')
 
         if (!product) return res.status(404).json({
             message: 'No se encontro el producto'
@@ -51,7 +56,11 @@ export const createProduct = async (req, res) => {
         const product = new Product(req.body)
         product.image = req.file?.filename
         
-        const newProduct = await product.save()
+        const savedProduct = await product.save()
+
+        const newProduct = await Product.findOne({ _id: savedProduct._id })
+                                        .populate('category')
+                                        .populate('subcategory')
 
         res.status(201).json({
             message: 'Producto creado',
@@ -91,11 +100,15 @@ export const updateProduct = async (req, res) => {
     const data = req.body
  
     try {
-        const updatedProduct = await Product.findByIdAndUpdate(id, data, { new: true })
+        const productIsUpdated = await Product.findByIdAndUpdate(id, data, { new: true })
 
-        if (!updatedProduct) return res.status(404).json({
+        if (!productIsUpdated) return res.status(404).json({
             message: 'No se encontro producto a actualizar'
         })
+
+        const updatedProduct = await Product.findOne({ _id: productIsUpdated._id })
+                                            .populate('category')
+                                            .populate('subcategory')
 
         res.status(200).json({
             message: 'Producto actualizado',

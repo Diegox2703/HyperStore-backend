@@ -1,8 +1,20 @@
+import mongoose from 'mongoose';
 import Category from '../models/category.model.js'
+import Subcategory from '../models/subcategory.model.js'
+import Product from '../models/product.model.js'
 
 export const getCategories = async (req, res) => {
     try {
-        const categories = await Category.find({})
+        const categories = await Category.aggregate([
+            {
+                $lookup: {
+                    from: 'subcategories', 
+                    localField: '_id',
+                    foreignField: 'category',
+                    as: 'subcategories'
+                }
+            }
+        ]);
 
         if (categories.length === 0) return res.status(404).json({
             message: 'No se encontraron categorias'
@@ -20,10 +32,51 @@ export const getCategories = async (req, res) => {
     }
 }
 
-export const createCategory = async (req, res) => {
+export const getProductsBySubcategory = async (req, res) => {
+    const { subcategory } = req.params
     try {
-        const category = new Category(req.body)
-        const newCategory = await category.save()
+        const subCategoryFound = await Subcategory.findOne({ subcategory })
+                                                  .populate('category')
+
+        if (!subCategoryFound) return res.status(404).json({
+            message: 'No se encontro la subcategoria',
+        })
+
+        const products = await Product.find({ subcategory: subCategoryFound._id })
+
+        res.status(200).json({
+            category: subCategoryFound.category.category,
+            subcategory: subCategoryFound.subcategory,
+            products
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            message: 'Error al obtener productos'
+        })
+    }
+}
+
+export const createCategory = async (req, res) => {
+    const { subcategories } = req.body
+        
+    try {
+        const categoryToCreate = new Category({ category: req.body.category })
+        const category = await categoryToCreate.save()
+        const subcategoriesToCreate = subcategories.map(sub => {
+            return {
+                subcategory: sub.subcategory,
+                category: category._id
+            }
+        })
+
+        const newSubcategories = await Subcategory.insertMany(subcategoriesToCreate)
+
+        const newCategory = {
+            _id: category._id,
+            category: category.category,
+            subcategories: newSubcategories
+        }
 
         res.status(201).json({
             message: 'Categoria creada con exito',
@@ -35,18 +88,45 @@ export const createCategory = async (req, res) => {
             message: 'Error al crear categoria'
         })
     }
-}
+} 
 
 export const updateCategory = async (req, res) => {
     const { id } = req.params
     const category = req.body
-
+    
     try {
-        const updatedCategory = await Category.findByIdAndUpdate(id, category, { new: true })
+        const updatedCategoryName = await Category.findByIdAndUpdate(id, { category: category.category }, { new: true })
 
-        if (!updateCategory) return res.status(404).json({
-            message: 'Categoria a actualizar no encontrada'
-        })
+        const validToDelete = category.toDelete.filter(item => mongoose.Types.ObjectId.isValid(item))
+
+        if (validToDelete.length !== 0) {
+            await Subcategory.deleteMany({ _id: { $in: validToDelete } })
+        }
+
+        const toUpdate = category.subcategories.filter(sub => mongoose.Types.ObjectId.isValid(sub._id))
+                                               .map(sub => ({
+                                                 updateOne: {
+                                                    filter: { _id: sub._id },
+                                                    update: { $set: { subcategory: sub.subcategory } }
+                                                 }
+                                               }))
+
+        const toAdd = category.subcategories.filter(sub => !mongoose.Types.ObjectId.isValid(sub._id))
+                                            .map(sub => ({ subcategory: sub.subcategory, category: id }))
+        
+        await Subcategory.bulkWrite(toUpdate)
+
+        if (toAdd.length !== 0) {
+            await Subcategory.insertMany(toAdd)
+        }
+
+        const updatedSubCategories = await Subcategory.find({ category: id })
+
+        const updatedCategory = {
+            _id: updatedCategoryName._id,
+            category: updatedCategoryName.category,
+            subcategories: updatedSubCategories
+        }
 
         res.status(200).json({
             message: 'Categoria actualizada',
@@ -69,6 +149,8 @@ export const deleteCategory = async (req, res) => {
         if (!deletedCategory) return res.status(404).json({
             message: 'Categoria a eliminar no encontrada'
         })
+
+        await Subcategory.deleteMany({ category: id })
 
         res.status(200).json({
             message: 'Categoria eliminada'

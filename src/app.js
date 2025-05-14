@@ -13,7 +13,7 @@ app.use(express.static(path.join(process.cwd(), 'src', 'uploads', 'products')))
 app.use(cors())
 
 app.use('/api', productRoutes)
-app.use('/api',authRoutes)
+app.use('/api', authRoutes)
 app.use('/api', userRoutes)
 app.use('/api', categoryRoutes)
     
