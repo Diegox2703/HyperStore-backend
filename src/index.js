@@ -5,7 +5,7 @@ import { config } from 'dotenv'
 config()
  
 const URI = process.env.MONGODB_URI
-const PORT = 3000
+const PORT = process.env.PORT || 3000
 
 const connectDB = async () => {
     try {
