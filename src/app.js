@@ -7,13 +7,15 @@ import orderRoutes from './routes/order.routes.js'
 import cors from 'cors'
 import path from 'path'
 import cookieParser from 'cookie-parser'
+import { config } from 'dotenv'
 
 const app = express()
+config()
 
 app.use(express.json())
 app.use(express.static(path.join(process.cwd(), 'src', 'uploads', 'products')))
 app.use(cors({
-    origin: 'https://hyperstore-l168.onrender.com',
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
     credentials: true
 }))
 app.use(cookieParser())
