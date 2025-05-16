@@ -13,7 +13,7 @@ const app = express()
 app.use(express.json())
 app.use(express.static(path.join(process.cwd(), 'src', 'uploads', 'products')))
 app.use(cors({
-    origin: 'https://hyperstore-o2f7.onrender.com',
+    origin: 'https://hyperstore-l168.onrender.com/',
     credentials: true
 }))
 app.use(cookieParser())
