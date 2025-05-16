@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import Category from '../models/category.model.js'
 import Subcategory from '../models/subcategory.model.js'
-import Product from '../models/product.model.js'
 
 export const getCategories = async (req, res) => {
     try {
@@ -28,31 +27,6 @@ export const getCategories = async (req, res) => {
         console.log(error)
         res.status(500).json({
             message: 'Error al obtener categoria'
-        })
-    }
-}
-
-export const getProductsBySubcategory = async (req, res) => {
-    const { subcategory } = req.params
-    try {
-        const subCategoryFound = await Subcategory.findOne({ subcategory })
-                                                  .populate('category')
-
-        if (!subCategoryFound) return res.status(404).json({
-            message: 'No se encontro la subcategoria',
-        })
-
-        const products = await Product.find({ subcategory: subCategoryFound._id })
-
-        res.status(200).json({
-            category: subCategoryFound.category.category,
-            subcategory: subCategoryFound.subcategory,
-            products
-        })
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            message: 'Error al obtener productos'
         })
     }
 }

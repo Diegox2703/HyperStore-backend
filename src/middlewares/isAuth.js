@@ -6,7 +6,9 @@ config()
 const JWT_SECRET = process.env.JWT_SECRET
 
 export const isAuth = (req, res, next) => {
-    const token = req.headers.access_token
+    const token = req.cookies.token
+
+    console.log(token)  
 
     if (!token) return res.status(401).json({
         message: 'No tienes acceso a esta ruta'
@@ -17,7 +19,7 @@ export const isAuth = (req, res, next) => {
             message: 'Token invalido'
         })
 
-        console.log(decoded)
+        req.user = decoded
 
         next()
     })

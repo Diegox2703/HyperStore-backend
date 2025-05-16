@@ -28,17 +28,35 @@ export const login = async (req, res) => {
 
         const token = jwt.sign(user.toJSON(), JWT_SECRET, { expiresIn: '1d' })
 
-        res.status(200).json({
-            message: 'Usuario logeado',
-            user,
-            token
-        })
+        res.status(200)
+           .cookie('token', token, {
+                httpOnly: true,  
+                secure: false,
+                sameSite: 'Lax',
+                path: '/'
+            })
+           .json({
+                message: 'Usuario logeado',
+                user
+            })
     } catch (error) {
         console.log(error)
         res.status(500).json({
             message: 'Error al logear usuario'
         })
     }
+}
+
+export const logOut = async (req, res) => {
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'Lax',
+        path: '/'
+    }) 
+       .json({
+            message: 'Sesion cerrada'
+       })
 }
   
 export const register = async (req, res) => {
@@ -60,11 +78,17 @@ export const register = async (req, res) => {
 
         const token = jwt.sign(newUser.toJSON(), JWT_SECRET, { expiresIn: '1d' })
 
-        res.status(201).json({
-            message: 'Usuario registrado',
-            token,
-            newUser
-        })
+        res.status(201)
+            .cookie('token', token, {
+                  httpOnly: true,  
+                  secure: false,
+                  sameSite: 'Lax',
+                  path: '/'
+            })
+            .json({
+                message: 'Usuario registrado',
+                newUser
+            })
     } catch (error) {
         console.log(error)
         res.status(500).json({
