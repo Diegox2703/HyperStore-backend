@@ -1,10 +1,12 @@
 import { Router } from 'express'
-import { deleteUser, getUsers, updateUser } from '../controllers/user.controller.js'
+import { createUser, deleteUser, getUsers, updateUser } from '../controllers/user.controller.js'
+import { isAuth } from '../middlewares/isAuth.js'
 
 const router = Router()
 
-router.get('/users', getUsers)
-router.delete('/users/:id', deleteUser)
-router.put('/users/:id', updateUser)
+router.get('/users', isAuth, getUsers)
+router.post('/users', isAuth, createUser)
+router.put('/users/:id', isAuth, updateUser)
+router.delete('/users/:id', isAuth, deleteUser)
 
 export default router

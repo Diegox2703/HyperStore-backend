@@ -8,8 +8,6 @@ const JWT_SECRET = process.env.JWT_SECRET
 export const isAuth = (req, res, next) => {
     const token = req.cookies.token
 
-    console.log(token)  
-
     if (!token) return res.status(401).json({
         message: 'No tienes acceso a esta ruta'
     })

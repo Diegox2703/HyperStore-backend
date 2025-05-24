@@ -1,4 +1,7 @@
 import User from '../models/user.model.js'
+import bcrypt from 'bcryptjs'
+
+const SALT = 10
 
 export const getUsers = async (req, res) => {
     try {
@@ -20,6 +23,35 @@ export const getUsers = async (req, res) => {
         console.log(error)
         res.status(500).json({
             message: 'Error al obtener usuarios'
+        })
+    }
+}
+
+export const createUser = async (req, res) => {
+    const { email } = req.body
+   
+    try {
+        const emailExist = await User.findOne({ email })
+
+        if (emailExist) return res.status(400).json({
+            message: 'Email ya existe'
+        })
+
+        const user = new User(req.body)
+        user.password = await bcrypt.hash(user.password, SALT)
+
+        const newUser = await user.save()
+
+        newUser.password = undefined
+
+        res.status(201).json({
+                message: 'Usuario registrado',
+                newUser
+            })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            message: 'Error al registrar usuario'
         })
     }
 }
